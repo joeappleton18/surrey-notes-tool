@@ -1,0 +1,22 @@
+{
+  "name": "surrey-notes-tool",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "This tool is designed to convert markdown to html and pdf. Each document is converted to a single HTML file and can be uploaded to SurreyLearn.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "bin": {
+    "surrey-notes-tool": "./index.js"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "highlight.js": "^11.10.0",
+    "markdown-it": "^14.1.0",
+    "markdown-it-emoji": "^3.0.0",
+    "marked": "^14.1.3"
+  }
+}
