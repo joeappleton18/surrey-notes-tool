@@ -45,14 +45,15 @@ def hello_world():
 
 :::tip
 
-this is a tip
+this is a tip 123
 
 :::
-
-or you can have
 
 :::tip custom title
 
 this is a tip
 
 :::
+
+: Topic 1 : Description
+: Topic 2 : Description 2 
