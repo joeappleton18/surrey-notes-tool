@@ -1,153 +1,119 @@
-#!/usr/bin/env node
 
-import fs from 'fs';
-import hljs from 'highlight.js';
-import { marked } from 'marked';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
 
-const args = process.argv.slice(2); // Get all arguments excluding the first two (node and script name)
-if (args.length < 1) {
-	console.error("Please provide the Markdown file as an argument.");
-	process.exit(1); // Exit if no file is provided
+import { program } from 'commander';
+import fs from 'fs/promises';
+import path from 'path';
+import parseFile from './parse_file.js';
+
+const templateFile = 'template/template.html';
+const outputFile = 'output.html';
+
+
+async function main(inputFile) {
+
+	// Read markdown content
+	try {
+		const markdownContent = await fs.readFile(inputFile, 'utf8');
+		const htmlContent = parseFile(markdownContent, templateFile);
+		const fileName = path.basename(inputFile, '.md');
+		const outputFileName = `${fileName}.html`;
+		fs.writeFile(outputFileName, htmlContent);
+	} catch (error) {
+		console.error('Error during the conversion process:', error);
+	}
+
+
 }
 
-const file = args[0]
-
-// Configure marked for syntax highlighting
-marked.setOptions({
-	highlight: (code, lang) => {
-		const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-		return hljs.highlight(code, { language }).value;
-	},
-	langPrefix: 'hljs language-', // Add hljs prefix for Highlight.js
-	breaks: true, // Enable line breaks in Markdown (like for paragraphs)
-});
-// ^:::([^:::])+:::
-const descriptionList = {
-	name: 'descriptionList',
-	level: 'block',                                     // Is this a block-level or inline-level tokenizer?
-	start(src) { return src.match(/:::tip[^:::\n]/)?.index; }, // Hint to Marked.js to stop and check for a match
-	tokenizer(src, tokens) {
-		const rule = /^:::tip([^:::])+:::/;    // Regex for the complete token, anchor to string start
-		const title = /^:::tip([^:::])+:::/;
-		const match = rule.exec(src);
-		if (match) {
-
-			console.log(match[0]);
-			const token = {                                 // Token to generate
-				type: 'descriptionList',                      // Should match "name" above
-				raw: match[0],                                // Text to consume from the source
-				text: match[0].trim(),                        // Additional custom properties
-				tokens: []                                    // Array where child inline tokens will be generated
-			};
-			this.lexer.inline(token.text, token.tokens);    // Queue this data to be processed for inline tokens
-			return token;
-		}
-	},
-	renderer(token) {
 
 
-		return ` <div class="alert alert-primary" role="alert">${this.parser.parseInline(token.tokens)}\n</div>`; // parseInline to turn child tokens into HTML
-	}
-};
+// async function main(inputFolder) {
+
+// 	if (!inputFolder) {
+// 		console.error('Please provide a folder path');
+// 		return;
+// 	}
+
+// 	try {
+
+// 		console.log('Input folder:', inputFolder);
+// 		const mdFiles = await glob.sync(`${inputFolder}/**/**.md`, { ignore: ['node_modules/**'] });
+// 		const allFolders = dt(inputFolder); 
+// 		console.log('Folders:', allFolders);
+
+// 		console.log('Files:', mdFiles);
+// 	} catch (error) {
+// 		console.error('Error during the conversion process:', error);
+// 	}
+
+// }
 
 
 
-const description = {
-	name: 'description',
-	level: 'inline',                                 // Is this a block-level or inline-level tokenizer?
-	start(src) { return src.match(/:::/)?.index; },    // Hint to Marked.js to stop and check for a match
-	tokenizer(src, tokens) {
-		const rule = /^:([^:\n]+):([^:\n]*)(?:\n|$)/;  // Regex for the complete token, anchor to string start
-		const match = rule.exec(src);
-		if (match) {
-			return {                                         // Token to generate
-				type: 'description',                           // Should match "name" above
-				raw: match[0],                                 // Text to consume from the source
-				dt: this.lexer.inlineTokens(match[1].trim()),  // Additional custom properties, including
-				dd: this.lexer.inlineTokens(match[2].trim())   //   any further-nested inline tokens
-			};
-		}
-	},
-	renderer(token) {
-		return `\n<dt>${this.parser.parseInline(token.dt)}</dt><dd>${this.parser.parseInline(token.dd)}</dd>`;
-	},
-	childTokens: ['dt', 'dd'],                 // Any child tokens to be visited by walkTokens
-};
 
-function walkTokens(token) {                        // Post-processing on the completed token tree
-	if (token.type === 'strong') {
-		token.text += ' walked';
-		token.tokens = this.Lexer.lexInline(token.text)
-	}
-}
+// function main(inputFile) {
+// 	try {
+// 		// Create a MarkdownIt instance and configure plugins
+// 		const md = new MarkdownIt().use(markdownItPrism);
+// 		md.use(MarkdownItContainer, 'tip', {
+// 			validate: params => {
+// 				// Match containers with or without a title
+// 				return params.trim().match(/^tip\s*(.*)$/);
+// 			},
+// 			render: (tokens, idx) => {
+// 				const m = tokens[idx].info.trim().match(/^tip\s*(.*)$/);
+// 				const title = m && m[1] ? m[1] : 'Tip';  // Default title if none is provided
 
-// Custom container extension for :::tip syntax
-const customContainers = {
-	name: 'customContainer',
-	level: 'block',
-	start(src) {
-		// Match the start of a :::tip block
-		return src.match(/^:::\s*tip\b/)?.index;
+// 				if (tokens[idx].nesting === 1) {
+// 					// Opening tag for the container
+// 					return `<div class="alert alert-primary" role="alert">
+//                     <h4 class="alert-heading">${title}</h4>
+//                     <p>`;
+// 				} else {
+// 					// Closing tag for the container
+// 					return '</p></div>\n';
+// 				}
+// 			},
+// 		});
 
-	},
-	tokenizer(src) {
-		// Match the content inside :::tip ... :::
-		const match = /^:::\s*tip(?:\s+([^]+?))?\s+([\s\S]+?):::\s*/m.exec(src);
+// 		// Read markdown content
+// 		const markdownContent = fs.readFileSync(inputFile, 'utf8');
 
-		if (match) {
+// 		// Render markdown to HTML
+// 		const htmlContent = md.render(markdownContent);
 
-			console.log(match);
-			return {
-				type: 'customContainer',
-				title: match[1] ? match[1].trim() : 'Tip', // Default title is "Tip"
-				text: match[2].trim(),
-				raw: match[0], // Store the raw markdown for replacement
-			};
-		}
-		return false; // Return null if no match is found
-	},
-	renderer(token) {
-		if (token.type === 'customContainer') {
-			// Render the custom container (alert box)
-			return `
-                <div class="alert alert-primary" role="alert">
-                    <h4 class="alert-heading">${token.title}</h4>
-                    <p>${token.text}</p>
-                </div>
-            `;
-		}
-		return ''; // Fallback for other token types
-	},
-};
+// 		// Read template file
+// 		let template = fs.readFileSync(templateFile, 'utf8');
 
-// Register the custom container extension
-marked.use({ extensions: [descriptionList, description], walkTokens });
-// Read the Markdown file
-const markdownContent = fs.readFileSync(file, 'utf8');
+// 		// Embed HTML into the template
+// 		template = template.replace('$body$', htmlContent);
 
-// Convert Markdown to HTML
-let htmlContent = marked(markdownContent);
+// 		// Write final output to an HTML file
+// 		fs.writeFileSync(outputFile, template);
 
-// Function to add target="_blank" to all links
-const addTargetBlank = (html) => {
-	return html.replace(/<a\s+(href="[^"]+")/g, '<a $1 target="_blank"');
-};
+// 		console.log(`Conversion successful. Output saved to ${outputFile}`);
 
-// Update all links to have target="_blank"
-htmlContent = addTargetBlank(htmlContent);
+// 	} catch (error) {
+// 		console.error('Error during the conversion process:', error);
+// 	}
 
-// Read the HTML template
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// }
 
-let template = fs.readFileSync(`${__dirname}/template/template.html`, 'utf8');
+// console.log(import.meta)
 
-// Embed the converted HTML into the template
-template = template.replace('$body$', htmlContent);
+// const directory = process.argv[2] ? process.argv[2] : import.meta.dirname;
 
-// Write the output to an HTML file
-fs.writeFileSync('output.html', template);
+// main(directory);
 
-console.log('Markdown has been converted to HTML with custom containers and links set to open in a new tab.');
+
+program
+	.version('1.0.0')
+	.arguments('<inputFile>')
+
+
+
+
+program.parse();
+
+
+main(program.args[0]);
