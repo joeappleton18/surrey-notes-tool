@@ -1,4 +1,4 @@
-
+#!/usr/bin/env node
 
 import { program } from 'commander';
 import fs from 'fs/promises';
@@ -7,7 +7,6 @@ import parseFile from './parse_file.js';
 
 const templateFile = 'template/template.html';
 const outputFile = 'output.html';
-
 
 async function main(inputFile) {
 

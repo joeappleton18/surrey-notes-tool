@@ -1,4 +1,3 @@
-
 import fs from 'fs';
 import MarkdownIt from 'markdown-it';
 import MarkdownItContainer from 'markdown-it-container';
@@ -8,8 +7,28 @@ import markdownItPrism from 'markdown-it-prism';
 const translateFile = (markdownContent, templateFile) => {
 
 	try {
-		// 		// Create a MarkdownIt instance and configure plugins
-		const md = new MarkdownIt().use(markdownItPrism);
+		// Create a MarkdownIt instance and configure plugins
+		const md = new MarkdownIt({
+			html: true,  // Enable HTML tags parsing
+			breaks: true,
+			linkify: true
+		}).use(markdownItPrism);
+
+		md.use((md) => {
+			const defaultRender = md.renderer.rules.html_block || function(tokens, idx, options, env, self) {
+				return tokens[idx].content;
+			};
+
+			md.renderer.rules.html_block = function(tokens, idx, options, env, self) {
+				const content = tokens[idx].content;
+				if (content.includes('<iframe') && content.includes('</iframe>')) {
+					// You can add additional security checks here if needed
+					return content;
+				}
+				return defaultRender(tokens, idx, options, env, self);
+			};
+		});
+
 		md.use(MarkdownItContainer, 'tip', {
 			validate: params => {
 				// Match containers with or without a title
