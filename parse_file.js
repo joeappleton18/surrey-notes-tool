@@ -73,6 +73,17 @@ const translateFile = (markdownContent, templateFile) => {
 			},
 		});
 
+		// Add target="_blank" to all links
+		const defaultRender = md.renderer.rules.link_open || function(tokens, idx, options, env, self) {
+			return self.renderToken(tokens, idx, options);
+		};
+
+		md.renderer.rules.link_open = function(tokens, idx, options, env, self) {
+			tokens[idx].attrPush(['target', '_blank']); // Add target="_blank"
+			tokens[idx].attrPush(['rel', 'noopener noreferrer']); // Security best practice
+			return defaultRender(tokens, idx, options, env, self);
+		};
+
 		// 		// Read markdown content
 
 		// 		// Render markdown to HTML

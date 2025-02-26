@@ -1,10 +1,31 @@
 # Surrey Notes Tool
 
-This tool is designed to convert markdown to self-contained HTMl files. 
+This tool is designed to convert markdown to self-contained HTMl files .
 
-Each document is converted to a single HTML file and can be uploaded to to a learning management system (LMS) such as SurreyLearn.
+The HTML files, along with any images, can be uploaded to a LMS (e.g., Surrey Learn).
 
 ## Usage
 
+- Ensure you have node installed
+- From terminal, run `npx surrey-notes-tool <inputFile>`
+- The tool will create an HTML file in the same directory as the input file.
 
-First, in root of your project create a folder called `templates` and add a `template.html` file. This file will be used to generate the HTML files. [For now, it's best to use the provided `template.html` file](https://github.com/joeappleton18/surrey-notes-tool/blob/master/template/template.html).
+### Uploading to the LMS
+
+- On a module page, in the top menu: click "Course Setup" -> "Manage Files"
+- Create a new folder for your content (e.g., "Week 1/lab-1")
+- Upload the HTML file and any images to the folder
+
+### Adding to the material
+
+- Navigate to "Course Materials"
+- Click on a topic section (e.g., "Lab 1") and click "Add item Content"
+- Click "more"
+- Select "course file"
+- Select the HTML file you created
+
+## TODO
+
+- Add a watch mode to the tool so that it automatically updates the HTML file when the markdown file is changed.
+- Add a way to add a template file to the tool so that it can be used to generate the HTML file.
+- Make it so it recursively parses all markdown files in a directory.
