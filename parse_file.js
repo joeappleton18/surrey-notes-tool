@@ -15,11 +15,11 @@ const translateFile = (markdownContent, templateFile) => {
 		}).use(markdownItPrism);
 
 		md.use((md) => {
-			const defaultRender = md.renderer.rules.html_block || function(tokens, idx, options, env, self) {
+			const defaultRender = md.renderer.rules.html_block || function (tokens, idx, options, env, self) {
 				return tokens[idx].content;
 			};
 
-			md.renderer.rules.html_block = function(tokens, idx, options, env, self) {
+			md.renderer.rules.html_block = function (tokens, idx, options, env, self) {
 				const content = tokens[idx].content;
 				if (content.includes('<iframe') && content.includes('</iframe>')) {
 					// You can add additional security checks here if needed
@@ -73,15 +73,87 @@ const translateFile = (markdownContent, templateFile) => {
 			},
 		});
 
+		md.use(MarkdownItContainer, 'warning', {
+			validate: params => {
+				// Match containers with or without a title
+				return params.trim().match(/^warning\s*(.*)$/);
+			},
+			render: (tokens, idx) => {
+				const m = tokens[idx].info.trim().match(/^warning\s*(.*)$/);
+				const title = m && m[1] ? m[1] : 'Warning';  // Default title if none is provided
+
+				if (tokens[idx].nesting === 1) {
+					// Opening tag for the container
+					return `<div class="alert alert-danger" role="alert">
+						<h4 class="alert-heading">${title}</h4>
+						<p>`;
+				} else {
+					// Closing tag for the container
+					return '</p></div>\n';
+				}
+			},
+		});
+
 		// Add target="_blank" to all links
-		const defaultRender = md.renderer.rules.link_open || function(tokens, idx, options, env, self) {
+		const defaultRender = md.renderer.rules.link_open || function (tokens, idx, options, env, self) {
 			return self.renderToken(tokens, idx, options);
 		};
 
-		md.renderer.rules.link_open = function(tokens, idx, options, env, self) {
+		md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
 			tokens[idx].attrPush(['target', '_blank']); // Add target="_blank"
 			tokens[idx].attrPush(['rel', 'noopener noreferrer']); // Security best practice
 			return defaultRender(tokens, idx, options, env, self);
+		};
+
+		// Custom rule for handling captions (lines starting with "> >")
+		md.core.ruler.before('block', 'caption', state => {
+			const lines = state.src.split('\n');
+			let newLines = [];
+
+			for (let i = 0; i < lines.length; i++) {
+				const line = lines[i];
+				if (line.startsWith('> >')) {
+					// Convert caption syntax to HTML figure caption
+					const captionText = line.substring(3).trim();
+					newLines.push(`<figcaption class="figure-caption text-center">${captionText}</figcaption>`);
+				} else {
+					newLines.push(line);
+				}
+			}
+
+			state.src = newLines.join('\n');
+		});
+
+		// Add custom rendering rules for tables with figure wrapper
+		md.renderer.rules.table_open = () => '<figure class="figure"><div class="table-responsive"><table class="table table-striped table-bordered">\n';
+		md.renderer.rules.table_close = () => '</table></div>\n';
+
+		// Optional: Add custom classes for table headers
+		md.renderer.rules.thead_open = () => '<thead class="table-dark">\n';
+
+		// Optional: Add custom rendering for cells if you want to handle alignment
+		md.renderer.rules.th_open = (tokens, idx, options, env, self) => {
+			const token = tokens[idx];
+			const align = token.align;
+			let classes = '';
+
+			if (align) {
+				classes = ` class="text-${align === 'left' ? 'start' : align === 'right' ? 'end' : 'center'}"`;
+			}
+
+			return `<th${classes}>`;
+		};
+
+		md.renderer.rules.td_open = (tokens, idx, options, env, self) => {
+			const token = tokens[idx];
+			const align = token.align;
+			let classes = '';
+
+			if (align) {
+				classes = ` class="text-${align === 'left' ? 'start' : align === 'right' ? 'end' : 'center'}"`;
+			}
+
+			return `<td${classes}>`;
 		};
 
 		// 		// Read markdown content
