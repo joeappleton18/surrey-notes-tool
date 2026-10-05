@@ -1,6 +1,6 @@
 {
   "name": "surrey-notes-tool",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "type": "module",
   "description": "This tool is designed to convert markdown to self-contained HTMl files.",
   "main": "index.js",
